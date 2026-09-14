@@ -11,6 +11,7 @@ public interface IronmanPathSyncConfig extends Config
 	String KEY_CODE = "code";
 	String KEY_TOKEN = "token";
 	String KEY_RSN = "linkedRsn";
+	String KEY_LAST_BANK = "lastBank";
 
 	@ConfigItem(
 		keyName = KEY_CODE,
@@ -64,6 +65,18 @@ public interface IronmanPathSyncConfig extends Config
 		hidden = true
 	)
 	default String linkedRsn()
+	{
+		return "";
+	}
+
+	/* Ultimo banco visto ("id:cantidad;..."), para que "Sync now" lo incluya aunque no abras el banco hoy. */
+	@ConfigItem(
+		keyName = KEY_LAST_BANK,
+		name = "",
+		description = "",
+		hidden = true
+	)
+	default String lastBank()
 	{
 		return "";
 	}
