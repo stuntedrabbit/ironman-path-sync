@@ -14,6 +14,13 @@ Set builder can pick the best gear for a boss from what you actually own.
    and the last bank the client saw this session. **Unlink** deletes the key on the plugin
    (the site has its own Unlink that deletes it on the server).
 
+## Saved sets and the bank filter
+
+Sets you save on the website show up in the plugin side panel. **Show in bank** filters your bank
+(a temporary bank tag laid out like the equipment screen) so you can withdraw the set with one click
+per item. The plugin never withdraws, equips or clicks anything for you: RuneLite does not allow plugins
+to automate game actions. **Clear bank filter** restores the normal bank view.
+
 ## What is sent
 
 Only game data: your display name, your real skill levels, and a list of item ids with
