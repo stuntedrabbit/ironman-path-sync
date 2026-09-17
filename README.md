@@ -7,9 +7,12 @@ Set builder can pick the best gear for a boss from what you actually own.
 ## How it works
 
 1. On the site: **Set builder > My bank > Link with RuneLite**. The site shows a 6-letter code.
-2. In RuneLite: open the plugin settings and paste the code in **Link code**.
-3. Open your bank in game. The plugin sends the snapshot once the bank finishes loading.
-4. The site receives it in a few seconds. The code expires after 15 minutes.
+2. In RuneLite: open the **Ironman Path Sync** side panel, paste the code and press **Link with this code**.
+3. Open your bank in game once. The plugin sends the snapshot and the server answers with a private key
+   that the plugin stores. The code is used once and expires after 15 minutes.
+4. From then on the bank is sent every time you open it. **Sync now** sends levels, inventory, worn items
+   and the last bank the client saw this session. **Unlink** deletes the key on the plugin
+   (the site has its own Unlink that deletes it on the server).
 
 ## What is sent
 
