@@ -54,7 +54,7 @@ import okhttp3.Response;
 )
 public class IronmanPathSyncPlugin extends Plugin
 {
-	static final String ENDPOINT = "https://www.ironmanpath.app/api/sync";
+	static final String ENDPOINT = "https://ironmanpath.app/api/sync"; // sin www: Vercel redirige www -> apex y OkHttp no sigue 307 en POST
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 	private static final int SEND_DELAY_TICKS = 3; // wait ~1.8s after the last bank change before sending
 	private static final int MIN_TICKS_BETWEEN_SENDS = 50; // ~30s
