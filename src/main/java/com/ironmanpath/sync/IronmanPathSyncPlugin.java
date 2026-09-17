@@ -63,7 +63,7 @@ import okhttp3.Response;
 public class IronmanPathSyncPlugin extends Plugin
 {
 	static final String ENDPOINT = "https://ironmanpath.app/api/sync"; // sin www: Vercel redirige www -> apex y OkHttp no sigue 307 en POST
-	private static final String VERSION = "1.1.0";
+	private static final String VERSION = "1.1.1";
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 	private static final int SEND_DELAY_TICKS = 3; // wait ~1.8s after the last bank change before sending
 	private static final int MIN_TICKS_BETWEEN_SENDS = 50; // ~30s between automatic sends
@@ -246,7 +246,17 @@ public class IronmanPathSyncPlugin extends Plugin
 		}
 
 		Map<Integer, Long> items = new HashMap<>();
-		addItems(items, bank);
+		boolean bankFromCache = false;
+		if (bank != null)
+		{
+			addItems(items, bank);
+			saveLastBank(items);
+		}
+		else
+		{
+			// Sync now sin abrir el banco en esta sesion: usar el ultimo banco guardado por el plugin.
+			bankFromCache = loadLastBank(items);
+		}
 		if (config.includeInventory())
 		{
 			addItems(items, client.getItemContainer(InventoryID.INV));
@@ -279,12 +289,13 @@ public class IronmanPathSyncPlugin extends Plugin
 		}
 		body.addProperty("rsn", local.getName());
 		body.addProperty("plugin", "ironman-path-sync/" + VERSION);
-		body.addProperty("bankKnown", bank != null);
+		body.addProperty("bankKnown", bank != null || bankFromCache);
 		body.add("levels", levels);
 		body.add("items", itemArray);
 
 		final int count = items.size();
-		final boolean bankKnown = bank != null;
+		final boolean bankKnown = bank != null || bankFromCache;
+		final boolean cached = bankFromCache;
 		final String rsn = local.getName();
 		Request request = new Request.Builder()
 			.url(ENDPOINT)
@@ -329,7 +340,7 @@ public class IronmanPathSyncPlugin extends Plugin
 						}
 						else
 						{
-							report("Bank synced (" + count + " item types)" + (bankKnown ? "" : " - bank not opened yet this session, sent inventory + levels only") + ".", true);
+							report("Bank synced (" + count + " item types)" + (cached ? " - bank from the last time you opened it" : bankKnown ? "" : " - bank never opened with this plugin yet, sent inventory + levels only") + ".", true);
 						}
 					}
 					else if (r.code() == 404 && isLinked())
@@ -363,6 +374,45 @@ public class IronmanPathSyncPlugin extends Plugin
 			panel.refresh();
 		}
 		clientThread.invokeLater(() -> chat("Ironman Path: " + message));
+	}
+
+	private void saveLastBank(Map<Integer, Long> items)
+	{
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<Integer, Long> e : items.entrySet())
+		{
+			if (sb.length() > 0)
+			{
+				sb.append(';');
+			}
+			sb.append(e.getKey()).append(':').append(e.getValue());
+		}
+		configManager.setConfiguration(IronmanPathSyncConfig.GROUP, IronmanPathSyncConfig.KEY_LAST_BANK, sb.toString());
+	}
+
+	private boolean loadLastBank(Map<Integer, Long> items)
+	{
+		String raw = config.lastBank();
+		if (raw == null || raw.isEmpty())
+		{
+			return false;
+		}
+		for (String pair : raw.split(";"))
+		{
+			int i = pair.indexOf(':');
+			if (i <= 0)
+			{
+				continue;
+			}
+			try
+			{
+				items.merge(Integer.parseInt(pair.substring(0, i)), Long.parseLong(pair.substring(i + 1)), Long::sum);
+			}
+			catch (NumberFormatException ignored)
+			{
+			}
+		}
+		return !items.isEmpty();
 	}
 
 	private static void addItems(Map<Integer, Long> items, ItemContainer container)
