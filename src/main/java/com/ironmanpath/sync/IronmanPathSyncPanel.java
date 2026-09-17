@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -26,6 +28,10 @@ class IronmanPathSyncPanel extends PluginPanel
 	private final JButton syncButton = new JButton("Sync now");
 	private final JButton unlinkButton = new JButton("Unlink");
 	private final JPanel codeBox = new JPanel();
+	private final JPanel setsBox = new JPanel();
+	private final JButton refreshSetsButton = new JButton("Refresh sets");
+	private final JButton clearFilterButton = new JButton("Clear bank filter");
+	private final JButton siteButton = new JButton("Open ironmanpath.app");
 
 	IronmanPathSyncPanel(IronmanPathSyncPlugin plugin)
 	{
@@ -78,6 +84,27 @@ class IronmanPathSyncPanel extends PluginPanel
 
 		result.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		body.add(result);
+		body.add(Box.createVerticalStrut(12));
+
+		JLabel setsTitle = new JLabel("Saved sets");
+		setsTitle.setFont(setsTitle.getFont().deriveFont(Font.BOLD, 14f));
+		setsTitle.setForeground(ColorScheme.BRAND_ORANGE);
+		body.add(setsTitle);
+		body.add(html("Sets you saved on the website (Set builder &gt; Save set). <b>Show in bank</b> filters your bank to those items so you withdraw them with one click each."));
+		body.add(Box.createVerticalStrut(6));
+		setsBox.setLayout(new BoxLayout(setsBox, BoxLayout.Y_AXIS));
+		setsBox.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		body.add(setsBox);
+		body.add(Box.createVerticalStrut(6));
+		JPanel setsButtons = new JPanel(new GridLayout(0, 1, 0, 4));
+		setsButtons.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		refreshSetsButton.addActionListener(e -> plugin.fetchSets());
+		clearFilterButton.addActionListener(e -> plugin.clearBankFilter());
+		siteButton.addActionListener(e -> plugin.openSite());
+		setsButtons.add(refreshSetsButton);
+		setsButtons.add(clearFilterButton);
+		setsButtons.add(siteButton);
+		body.add(setsButtons);
 
 		add(body, BorderLayout.NORTH);
 		refresh();
@@ -107,9 +134,57 @@ class IronmanPathSyncPanel extends PluginPanel
 			{
 				status.setText("<html><body style='width:180px'>Not linked yet.</body></html>");
 			}
+			rebuildSets(linked);
 			revalidate();
 			repaint();
 		});
+	}
+
+	private void rebuildSets(boolean linked)
+	{
+		setsBox.removeAll();
+		List<IronmanPathSyncPlugin.SavedSet> copy = new ArrayList<>();
+		synchronized (plugin.sets)
+		{
+			copy.addAll(plugin.sets);
+		}
+		refreshSetsButton.setEnabled(linked);
+		if (!linked)
+		{
+			setsBox.add(html("<i>Link first to see your sets here.</i>"));
+			return;
+		}
+		if (copy.isEmpty())
+		{
+			setsBox.add(html("<i>No saved sets yet. Save one on the website and press Refresh sets.</i>"));
+			return;
+		}
+		for (IronmanPathSyncPlugin.SavedSet st : copy)
+		{
+			JPanel card = new JPanel();
+			card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+			card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+			card.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+			card.setAlignmentX(LEFT_ALIGNMENT);
+			JLabel name = new JLabel("<html><body style='width:170px'><b>" + esc(st.name) + "</b></body></html>");
+			name.setForeground(ColorScheme.BRAND_ORANGE);
+			card.add(name);
+			String line = (st.boss.isEmpty() ? "" : st.boss + " · ") + st.style + " · " + String.format("%.2f", st.dps) + " DPS · max " + st.maxHit + " · " + st.items.size() + " items";
+			JLabel info = html(esc(line));
+			card.add(info);
+			card.add(Box.createVerticalStrut(4));
+			JButton show = new JButton("Show in bank" + (plugin.shownSetName().equals(st.name) ? " (active)" : ""));
+			show.setAlignmentX(LEFT_ALIGNMENT);
+			show.addActionListener(e -> plugin.showSetInBank(st));
+			card.add(show);
+			setsBox.add(card);
+			setsBox.add(Box.createVerticalStrut(6));
+		}
+	}
+
+	private static String esc(String v)
+	{
+		return v.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	void setResult(String text, boolean ok)
