@@ -1,9 +1,7 @@
 # Ironman Path Sync
 
-> **Status: under review in the RuneLite Plugin Hub** ([PR #16540](https://github.com/runelite/plugin-hub/pull/16540)).
-> Until RuneLite approves it, the plugin does **not** show up in the Plugin Hub and cannot be installed from there.
-> Meanwhile you can still use the [ironmanpath.app](https://ironmanpath.app) Set builder by pasting your bank
-> (Set builder > My bank > Option 2) or importing your levels from Wise Old Man.
+> **Available in the RuneLite Plugin Hub.** In RuneLite open the Plugin Hub, search for
+> **Ironman Path Sync** and install it.
 
 RuneLite plugin for [ironmanpath.app](https://www.ironmanpath.app). It sends your bank
 (plus inventory and worn items, optional) and your skill levels to the site, so the
